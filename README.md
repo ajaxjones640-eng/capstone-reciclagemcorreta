@@ -58,10 +58,9 @@ python -m unittest discover -s tests
 ```
 
 ![alt text](image.png)
-
 ```
-
 
 ```
 
 ![alt text](game.png)
+
