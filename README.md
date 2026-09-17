@@ -6,13 +6,13 @@ Um jogo 2D em Pygame onde o jogador precisa capturar itens de lixo com a lixeira
 
 **Titulo:** Jogo de Reciclagem — Sort It Right!
 
-| Membro | Função | Responsabilidades |
-|---|---|---|
-| Tayler Guilherme 1 | Desenvolvedor Líder | Lógica principal do jogo, loop de eventos, hierarquia de classes (`TrashItem`, `Bin`) e mecânica de colisão |
-| Francoar Henrique 2 | Engenheiro de Gameplay e QA | Balanceamento de velocidade/pontuação, ajuste de assets visuais e suíte de testes unitários automatizados |
-| Jose Trindade 3 | Designer de Assets e Level Design | Criação de sprites, sons e curva de dificuldade (velocidade de queda por fase) |
-| Alan Miranda 4 | Product Owner / Documentação | Gestão do backlog de issues no GitHub, critérios de aceite e redação do README |
-| Carlos Henrique 5 | Engenheiro de Integração/DevOps | Configuração do repositório, fluxo de branches/Pull Requests e pipeline de testes automatizados |
+| Membro              | Função                            | Responsabilidades                                                                                           |
+| ------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Tayler Guilherme 1  | Desenvolvedor Líder               | Lógica principal do jogo, loop de eventos, hierarquia de classes (`TrashItem`, `Bin`) e mecânica de colisão |
+| Francoar Henrique 2 | Engenheiro de Gameplay e QA       | Balanceamento de velocidade/pontuação, ajuste de assets visuais e suíte de testes unitários automatizados   |
+| Jose Trindade 3     | Designer de Assets e Level Design | Criação de sprites, sons e curva de dificuldade (velocidade de queda por fase)                              |
+| Alan Miranda 4      | Product Owner / Documentação      | Gestão do backlog de issues no GitHub, critérios de aceite e redação do README                              |
+| Carlos Henrique 5   | Engenheiro de Integração/DevOps   | Configuração do repositório, fluxo de branches/Pull Requests e pipeline de testes automatizados             |
 
 ## 2. 🎯 Declaração do Problema (Problem Statement)
 
@@ -27,10 +27,12 @@ Ao lidar com a separação de resíduos no dia a dia, as pessoas frequentemente 
 ## 3. 🚀 Funcionalidades Principais do MVP
 
 **Sistema de Entidades OOP**
+
 - [x] Classes `TrashItem` e `Bin` encapsulando posição, velocidade e `waste_type` (vidro, plástico, papel, orgânico)
 - [x] Método `update()` aplicando a velocidade de queda a cada frame
 
 **Loop de Jogo e Colisão**
+
 - [x] Clock a 60 FPS controlando o loop principal e a leitura das setas do teclado
 - [x] Detecção de colisão 2D via `rect.colliderect()` entre o item e a lixeira do jogador
 - [x] Pontuação: +10 pontos quando o `waste_type` do item bate com o `target_type` da lixeira, com reposicionamento automático do item no topo após a captura
@@ -38,18 +40,28 @@ Ao lidar com a separação de resíduos no dia a dia, as pessoas frequentemente 
 ## 4. ⚙️ Guia de Execução
 
 **Instalar dependências**
+
 ```bash
 pip install pygame
 ```
 
 **Rodar a aplicação**
+
 ```bash
 python main.py
 ```
 
 **Executar os testes unitários**
+
 ```bash
 python -m unittest discover -s tests
 ```
 
 ![alt text](image.png)
+
+```
+
+
+```
+
+![alt text](game.png)
