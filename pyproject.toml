@@ -1,0 +1,13 @@
+[project]
+name = "seu-capstone"
+version = "0.1.0"
+description = "Capstone Python — app Streamlit com backend isolado e persistência em JSON"
+requires-python = ">=3.10"
+dependencies = [
+    "streamlit",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
