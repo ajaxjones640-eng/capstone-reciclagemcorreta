@@ -56,6 +56,57 @@ python main.py
 ```bash
 python -m unittest discover -s tests
 ```
+5. 📊 Esquema de Dados (Data Schema)
+
+O estado do jogo é representado em dicionários JSON simples e serializáveis, prontos para salvar/carregar progresso:
+
+Esquema de Item de Lixo (TrashItem)
+
+json
+{
+  "id": "item_014",
+  "x": 220,
+  "y": 96,
+  "velocity": 5,
+  "waste_type": "plastico"
+}
+
+Esquema de Lixeira (Bin)
+
+json
+{
+  "id": "bin_2",
+  "x": 480,
+  "y": 620,
+  "target_type": "vidro"
+}
+
+Esquema de Sessão/Save (game_state.json)
+
+json
+{
+  "score": 90,
+  "high_score": 240,
+  "sound_on": true,
+  "rounds_played": 12,
+  "last_played": "2026-09-17T13:31:00-03:00"
+}
+6. ⚙️ Guia de Execução
+
+Instalar dependências
+
+bash
+pip install pygame
+
+Rodar a aplicação
+
+bash
+python main.py
+
+Executar os testes unitários
+
+bash
+python -m unittest discover -s tests
 
 ![alt text](image.png)
 ```
