@@ -63,32 +63,29 @@ O estado do jogo é representado em dicionários JSON simples e serializáveis, 
 Esquema de Item de Lixo (TrashItem)
 ```json
 {
-  "id": "item_014",
-  "x": 220,
-  "y": 96,
-  "velocity": 5,
-  "waste_type": "plastico"
-}
-
-Esquema de Lixeira (Bin)
-
-json
-{
-  "id": "bin_2",
-  "x": 480,
-  "y": 620,
-  "target_type": "vidro"
-}
-
-Esquema de Sessão/Save (game_state.json)
-
-json
-{
-  "score": 90,
-  "high_score": 240,
-  "sound_on": true,
-  "rounds_played": 12,
-  "last_played": "2026-09-17T13:31:00-03:00"
+  "lixeiras": [
+    { "id": "papel", "nome": "Papel", "cor": "azul" },
+    { "id": "plastico", "nome": "Plástico", "cor": "vermelho" },
+    { "id": "vidro", "nome": "Vidro", "cor": "verde" },
+    { "id": "metal", "nome": "Metal", "cor": "amarelo" },
+    { "id": "organico", "nome": "Orgânico", "cor": "marrom" }
+  ],
+  "itens": [
+    {
+      "id_item": 1,
+      "nome": "Garrafa Pet",
+      "imagem_url": "assets/images/garrafa_pet.png",
+      "lixeira_correta": "plastico",
+      "pontos": 10
+    }
+  ],
+  "ranking": [
+    {
+      "colocacao": 1,
+      "nickname": "EcoGamer",
+      "score": 150
+    }
+  ]
 }
 ```
 6. ⚙️ Guia de Execução
