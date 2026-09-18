@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Sort it right!</title>
+
+
+    <style>
+
+        /* ==================================================
+           CORES
+        ================================================== */
+
+        :root {
+
+            --lime: #32CD32;
+            --lime-light: #66E866;
+            --lime-dark: #20A820;
+
+            --green-dark: #168A16;
+
+            --white: #FFFFFF;
+            --white-soft: #F7FFF7;
+
+            --text: #173317;
+            --text-light: #5B715B;
+
+            --border: #D8F3D8;
+
+        }
+
+
+        /* ==================================================
+           RESET
+        ================================================== */
+
+        * {
+
+            box-sizing: border-box;
+
+            margin: 0;
+            padding: 0;
+
+        }
+
+
+        html,
+        body {
+
+            width: 100%;
+            height: 100%;
+
+        }
+
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: var(--white);
+
+            color: var(--text);
+
+            overflow: hidden;
+
+        }
+
+
+        /* ==================================================
+           APLICAÇÃO
+        ================================================== */
+
+        .app {
+
+            width: 100%;
+            height: 100vh;
+
+            min-height: 600px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            position: relative;
+
+            background:
+
+                radial-gradient(
+                    circle at 50% 35%,
+                    #F4FFF4 0%,
+                    #FFFFFF 55%
+                );
+
+        }
+
+
+        /* ==================================================
+           DECORAÇÃO DE FUNDO
+        ================================================== */
+
+        .background-circle {
+
+            position: absolute;
+
+            border-radius: 50%;
+
+            pointer-events: none;
+
+            z-index: 0;
+
+        }
+
+
+        .circle-one {
+
+            width: 420px;
+            height: 420px;
+
+            background: rgba(50, 205, 50, 0.07);
+
+            top: -180px;
+            left: -150px;
+
+        }
+
+
+        .circle-two {
+
+            width: 350px;
+            height: 350px;
+
+            background: rgba(50, 205, 50, 0.06);
+
+            bottom: -160px;
+            right: -120px;
+
+        }
+
+
+        /* ==================================================
+           MENU
+        ================================================== */
+
+        .menu {
+
+            width: 300px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            text-align: center;
+
+            position: relative;
+
+            z-index: 2;
+
+        }
+
+
+        /* ==================================================
+           ÍCONE
+        ================================================== */
+
+        .recycle-icon {
+
+            width: 86px;
+            height: 86px;
+
+            border-radius: 50%;
+
+            background: var(--lime);
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 48px;
+
+            box-shadow:
+                0 10px 25px rgba(50, 205, 50, 0.25);
+
+            margin-bottom: 22px;
+
+            animation: float 3s ease-in-out infinite;
+
+        }
+
+
+        /* ==================================================
+           ANIMAÇÃO DO ÍCONE
+        ================================================== */
+
+        @keyframes float {
+
+            0% {
+
+                transform: translateY(0);
+
+            }
+
+            50% {
+
+                transform: translateY(-5px);
+
+            }
+
+            100% {
+
+                transform: translateY(0);
+
+            }
+
+        }
+
+
+        /* ==================================================
+           TÍTULO
+        ================================================== */
+
+        .title {
+
+            color: var(--green-dark);
+
+            font-size: 42px;
+
+            font-weight: 800;
+
+            line-height: 1.1;
+
+            letter-spacing: -1px;
+
+            white-space: nowrap;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        /* ==================================================
+           SUBTÍTULO
+        ================================================== */
+
+        .subtitle {
+
+            color: var(--text-light);
+
+            font-size: 15px;
+
+            line-height: 1.4;
+
+            margin-bottom: 30px;
+
+        }
+
+
+        /* ==================================================
+           BOTÕES
+        ================================================== */
+
+        .buttons {
+
+            width: 260px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 10px;
+
+        }
+
+
+        .menu-button {
+
+            width: 260px;
+            height: 54px;
+
+            border-radius: 12px;
+
+            border: 2px solid var(--border);
+
+            background: var(--white);
+
+            color: var(--text);
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 3px 10px rgba(50, 205, 50, 0.06);
+
+            transition:
+                transform 0.15s ease,
+                background-color 0.2s ease,
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+
+        }
+
+
+        .menu-button:hover {
+
+            border-color: var(--lime);
+
+            background: #F4FFF4;
+
+            box-shadow:
+                0 6px 18px rgba(50, 205, 50, 0.15);
+
+            transform: translateY(-2px);
+
+        }
+
+
+        .menu-button:active {
+
+            transform: translateY(0) scale(0.98);
+
+        }
+
+
+        /* ==================================================
+           BOTÃO JOGAR
+        ================================================== */
+
+        .play-button {
+
+            background: var(--lime);
+
+            border: 2px solid var(--lime);
+
+            color: var(--white);
+
+            box-shadow:
+                0 7px 18px rgba(50, 205, 50, 0.28);
+
+        }
+
+
+        .play-button:hover {
+
+            background: var(--lime-dark);
+
+            border-color: var(--lime-dark);
+
+            color: var(--white);
+
+            box-shadow:
+                0 9px 22px rgba(50, 205, 50, 0.32);
+
+        }
+
+
+        /* ==================================================
+           RODAPÉ
+        ================================================== */
+
+        .footer {
+
+            position: absolute;
+
+            bottom: 35px;
+
+            left: 0;
+
+            width: 100%;
+
+            text-align: center;
+
+            color: #91A791;
+
+            font-size: 12px;
+
+            z-index: 2;
+
+        }
+
+
+        /* ==================================================
+           RESPONSIVIDADE
+        ================================================== */
+
+        @media (max-width: 500px) {
+
+            .menu {
+
+                width: 90%;
+
+            }
+
+
+            .title {
+
+                font-size: 36px;
+
+            }
+
+
+            .buttons {
+
+                width: 100%;
+                max-width: 260px;
+
+            }
+
+
+            .menu-button {
+
+                width: 100%;
+
+            }
+
+        }
+
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ==================================================
+         FUNDO
+    ================================================== -->
+
+    <div class="background-circle circle-one"></div>
+
+    <div class="background-circle circle-two"></div>
+
+
+    <!-- ==================================================
+         APLICAÇÃO
+    ================================================== -->
+
+    <main class="app">
+
+
+        <!-- ==================================================
+             MENU PRINCIPAL
+        ================================================== -->
+
+        <section class="menu">
+
+
+            <!-- Ícone -->
+
+            <div class="recycle-icon">
+
+                ♻️
+
+            </div>
+
+
+            <!-- Título -->
+
+            <h1 class="title">
+
+                Sort it right!
+
+            </h1>
+
+
+            <!-- Subtítulo -->
+
+            <p class="subtitle">
+
+                O jogo de reciclagem
+
+            </p>
+
+
+            <!-- ==================================================
+                 BOTÕES
+            ================================================== -->
+
+            <div class="buttons">
+
+
+                <!-- Jogar -->
+
+                <button
+                    class="menu-button play-button"
+                    id="playButton"
+                >
+
+                    ▶&nbsp; Jogar
+
+                </button>
+
+
+                <!-- Como jogar -->
+
+                <button
+                    class="menu-button"
+                    id="instructionsButton"
+                >
+
+                    ⓘ&nbsp; Como jogar
+
+                </button>
+
+
+                <!-- Som -->
+
+                <button
+                    class="menu-button"
+                    id="soundButton"
+                >
+
+                    🔊&nbsp; Som: ligado
+
+                </button>
+
+
+                <!-- Sair -->
+
+                <button
+                    class="menu-button"
+                    id="exitButton"
+                >
+
+                    ×&nbsp; Sair
+
+                </button>
+
+
+            </div>
+
+
+        </section>
+
+
+        <!-- ==================================================
+             RODAPÉ
+        ================================================== -->
+
+        <div class="footer">
+
+            Use as setas para jogar
+
+        </div>
+
+
+    </main>
+
+
+    <!-- ==================================================
+         JAVASCRIPT
+    ================================================== -->
+
+    <script>
+
+
+        /* ==================================================
+           ESTADO
+        ================================================== */
+
+        let soundEnabled = true;
+
+
+        /* ==================================================
+           JOGAR
+        ================================================== */
+
+        const playButton =
+            document.getElementById("playButton");
+
+
+        playButton.addEventListener(
+            "click",
+            function () {
+
+                console.log("Iniciando jogo...");
+
+            }
+        );
+
+
+        /* ==================================================
+           COMO JOGAR
+        ================================================== */
+
+        const instructionsButton =
+            document.getElementById(
+                "instructionsButton"
+            );
+
+
+        instructionsButton.addEventListener(
+            "click",
+            function () {
+
+                console.log("Abrindo instruções...");
+
+            }
+        );
+
+
+        /* ==================================================
+           SOM
+        ================================================== */
+
+        const soundButton =
+            document.getElementById(
+                "soundButton"
+            );
+
+
+        soundButton.addEventListener(
+            "click",
+            function () {
+
+                soundEnabled =
+                    !soundEnabled;
+
+
+                if (soundEnabled) {
+
+                    soundButton.innerHTML =
+                        "🔊&nbsp; Som: ligado";
+
+                } else {
+
+                    soundButton.innerHTML =
+                        "🔇&nbsp; Som: desligado";
+
+                }
+
+            }
+        );
+
+
+        /* ==================================================
+           SAIR
+        ================================================== */
+
+        const exitButton =
+            document.getElementById(
+                "exitButton"
+            );
+
+
+        exitButton.addEventListener(
+            "click",
+            function () {
+
+                console.log("Sair");
+
+            }
+        );
+
+
+    </script>
+
+
+</body>
+
+</html>
