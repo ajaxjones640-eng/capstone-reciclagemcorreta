@@ -1,13 +1,20 @@
 [project]
-name = "seu-capstone"
+name = "capstone-reciclagemcorreta"
 version = "0.1.0"
-description = "Capstone Python — app Streamlit com backend isolado e persistência em JSON"
-requires-python = ">=3.10"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Jw-trindade", email = "trindade2888@gmail.com" }
+]
+requires-python = ">=3.13"
 dependencies = [
-    "streamlit",
+    "pygame-ce>=2.5.8",
+    "pymunk>=7.3.0",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest",
-]
+[project.scripts]
+capstone-reciclagemcorreta = "capstone_reciclagemcorreta:main"
+
+[build-system]
+requires = ["uv_build>=0.12.15,<0.13.0"]
+build-backend = "uv_build"
