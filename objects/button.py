@@ -4,7 +4,12 @@ from config import LIME, LIME_DARK, WHITE, TEXT, BORDER, FONT_BUTTON
 
 
 class Button:
-    """Botão clicável com efeito de hover e sombra."""
+    """Botão clicável com efeito de hover e sombra.
+
+    As cores de hover e de sombra podem ser customizadas (usado pelo tema
+    escuro do protótipo); se não forem informadas, caem no comportamento
+    padrão do tema claro original.
+    """
 
     def __init__(
         self,
@@ -12,14 +17,36 @@ class Button:
         text,
         color=WHITE,
         text_color=TEXT,
-        border_color=BORDER
+        border_color=BORDER,
+        hover_color=None,
+        hover_border_color=None,
+        shadow_color=(235, 248, 235),
+        shadow=True
     ):
         self.rect = pygame.Rect(rect)
         self.text = text
         self.color = color
         self.text_color = text_color
         self.border_color = border_color
+        self.shadow_color = shadow_color
+        self.shadow = shadow
         self.hovered = False
+
+        if hover_color is not None:
+            self.hover_color = hover_color
+            self.hover_border_color = (
+                hover_border_color
+                if hover_border_color is not None
+                else hover_color
+            )
+        else:
+            # Comportamento padrão do tema claro original
+            if color == LIME:
+                self.hover_color = LIME_DARK
+                self.hover_border_color = LIME_DARK
+            else:
+                self.hover_color = (244, 255, 244)
+                self.hover_border_color = LIME
 
     # Atualiza o estado do botão
     def update(self, mouse_pos):
@@ -33,23 +60,19 @@ class Button:
 
         if self.hovered:
             rect.y -= 2
+            color = self.hover_color
+            border = self.hover_border_color
 
-            if self.color == LIME:
-                color = LIME_DARK
-                border = LIME_DARK
-            else:
-                color = (244, 255, 244)
-                border = LIME
+        if self.shadow:
+            shadow = rect.copy()
+            shadow.y += 4
 
-        shadow = rect.copy()
-        shadow.y += 4
-
-        pygame.draw.rect(
-            surface,
-            (235, 248, 235),
-            shadow,
-            border_radius=12
-        )
+            pygame.draw.rect(
+                surface,
+                self.shadow_color,
+                shadow,
+                border_radius=12
+            )
 
         pygame.draw.rect(
             surface,

@@ -1,99 +1,159 @@
+import random
+
 import pygame
 
 from config import (
+    WIDTH,
+    HEIGHT,
     WHITE,
-    GREEN_DARK,
-    GREEN_BG,
-    RED,
-    DARK,
-    YELLOW,
-    FONT_PHASE,
+    SKY_BLUE,
+    PANEL_DARK,
+    HEART_COLOR,
+    HEART_EMPTY,
+    PRIMARY_GREEN,
+    TEXT_ON_DARK,
+    MUTED_ON_DARK,
+    BTN_DARK,
+    BTN_DARK_HOVER,
+    BTN_DARK_BORDER,
+    FONT_SUBTITLE,
     FONT_SCORE,
-    FONT_STAR,
+    FONT_SMALL,
     FONT_MESSAGE,
-    GAME_DURATION,
+    LIVES_INICIAIS,
 )
 from objects.button import Button
 from objects.bin import create_bins, update_bin_positions, check_bin_collision
-from objects.trash import create_trash_items, reset_trash_positions
-from utils.helpers import TimedMessage
+from objects.trash import spawn_trash_item, ITEM_SIZE, POINTS_PER_ITEM
+from utils.helpers import TimedMessage, clamp, draw_heart, draw_recycle_icon
+
+# Esteira no topo da tela, de onde os resíduos nascem
+BELT_Y = 190
+BELT_HEIGHT = 60
+BELT_COLOR = (35, 40, 54)
+BELT_ROLLER = (70, 78, 96)
+
+# Quantos resíduos podem estar na tela ao mesmo tempo e de quanto em quanto
+# tempo (em quadros) um novo nasce
+MAX_ITEMS = 3
+SPAWN_MIN_FRAMES = 70
+SPAWN_MAX_FRAMES = 130
+
+# Velocidade de queda (px por quadro): aumenta com a pontuação até o limite
+BASE_SPEED = 3.2
+MAX_SPEED = 7.5
+SPEED_PER_POINT = 0.03
+
+MESSAGE_DURATION_MS = 750
 
 
 class GameScreen:
-    """Tela de uma fase jogável: arrastar resíduos até os cestos certos."""
+    """Tela do jogo: a esteira traz vários resíduos ao mesmo tempo em direção
+    às lixeiras. O jogador arrasta cada um até a lixeira certa antes que ele
+    "caia" sozinho lá embaixo. Errar a lixeira ou deixar o resíduo cair tira
+    uma vida (são 3); o jogo termina quando as vidas acabam.
+
+    Mecânica vinda do protótipo "capstone-reciclagemcorreta", adaptada ao
+    formato de tela da estrutura (start / handle_event / update / draw).
+    """
 
     def __init__(self):
-        self.back_button = Button((25, 25, 130, 42), "← Menu")
+        self.back_button = Button(
+            (25, 25, 130, 42),
+            "← Menu",
+            color=BTN_DARK,
+            text_color=TEXT_ON_DARK,
+            border_color=BTN_DARK_BORDER,
+            hover_color=BTN_DARK_HOVER,
+            shadow=False
+        )
+
+        self.width = WIDTH
+        self.height = HEIGHT
 
         self.bins = create_bins()
-        self.trash_items = create_trash_items()
-        self.message = TimedMessage()
+        update_bin_positions(self.bins, self.width, self.height)
+
+        self.items = []
+        self.message = TimedMessage(MESSAGE_DURATION_MS)
 
         self.score = 0
-        self.stars = 3
-        self.time_left = GAME_DURATION
-        self.start_ticks = 0
+        self.lives = LIVES_INICIAIS
+        self.spawn_timer = 1
 
         self.dragging_item = None
-        self.drag_offset_x = 0
-        self.drag_offset_y = 0
+        self.drag_offset = (0, 0)
 
         self.finished = False
+        self.end_reason = ""
 
-    # Reinicia o estado da fase (chamado ao entrar na tela pelo menu)
+    # Reinicia o estado da partida (chamado ao entrar na tela pelo menu)
     def start(self, width, height):
+        self.width = width
+        self.height = height
+        update_bin_positions(self.bins, width, height)
+
+        self.items = []
+        self.message = TimedMessage(MESSAGE_DURATION_MS)
+
         self.score = 0
-        self.stars = 3
-        self.time_left = GAME_DURATION
-        self.start_ticks = pygame.time.get_ticks()
-        self.message = TimedMessage()
+        self.lives = LIVES_INICIAIS
+
+        # O primeiro resíduo nasce quase de imediato
+        self.spawn_timer = 1
+
         self.dragging_item = None
         self.finished = False
+        self.end_reason = ""
 
-        reset_trash_positions(self.trash_items, width, height)
+    # Velocidade de queda dos resíduos que nascerem agora
+    def _current_speed(self):
+        return min(BASE_SPEED + self.score * SPEED_PER_POINT, MAX_SPEED)
 
-    # Atualiza o cronômetro da fase
-    def _update_timer(self):
-        elapsed = (pygame.time.get_ticks() - self.start_ticks) // 1000
-        self.time_left = max(0, GAME_DURATION - elapsed)
+    # Faixa horizontal em que um resíduo pode nascer (acima das lixeiras)
+    def _spawn_range(self):
+        half = ITEM_SIZE // 2
 
-    # Verifica se todos os resíduos já foram descartados
-    def _check_finished(self):
-        return all(not item.active for item in self.trash_items)
+        return (
+            self.bins[0].rect.left + half,
+            self.bins[-1].rect.right - half
+        )
 
-    # Finaliza o descarte do resíduo, verificando o cesto de destino
+    # Altura a partir da qual o resíduo "cai" sozinho dentro da lixeira
+    def _fall_line(self):
+        return self.bins[0].rect.top
+
+    # Resolve o descarte: acerto soma pontos, erro tira uma vida.
+    # Solto fora de uma lixeira, o resíduo simplesmente continua descendo.
     def _drop_item(self, item):
-        target_bin = check_bin_collision(item.get_rect(), self.bins)
+        target_bin = check_bin_collision(item.rect, self.bins)
 
         if target_bin is None:
-            item.reset_position()
             return
 
+        self.items.remove(item)
+
         if target_bin.type == item.type:
-            item.active = False
-            self.score += 100
-            self.message.show("Descarte correto!", GREEN_DARK)
+            self.score += POINTS_PER_ITEM
+            self.message.show(f"+{POINTS_PER_ITEM} correto!", PRIMARY_GREEN)
         else:
-            item.reset_position()
-            self.stars = max(0, self.stars - 1)
-            self.message.show("Descarte incorreto!", RED)
+            self.lives = max(0, self.lives - 1)
+            self.message.show("Lixeira errada!", HEART_COLOR)
 
     # Processa o clique do mouse (início do arrasto ou botão de voltar)
     def _handle_mouse_down(self, event):
         if self.back_button.clicked(event):
             return "menu"
 
-        for item in reversed(self.trash_items):
-            if not item.active:
-                continue
-
-            rect = item.get_rect()
-
-            if rect.collidepoint(event.pos):
+        # Pega o resíduo mais "de cima" (desenhado por último) sob o cursor
+        for item in reversed(self.items):
+            if item.rect.collidepoint(event.pos):
                 self.dragging_item = item
-                self.drag_offset_x = item.x - event.pos[0]
-                self.drag_offset_y = item.y - event.pos[1]
-                return None
+                self.drag_offset = (
+                    item.rect.centerx - event.pos[0],
+                    item.rect.centery - event.pos[1]
+                )
+                break
 
         return None
 
@@ -102,18 +162,31 @@ class GameScreen:
         if self.dragging_item is None:
             return
 
-        self.dragging_item.x = event.pos[0] + self.drag_offset_x
-        self.dragging_item.y = event.pos[1] + self.drag_offset_y
+        self.dragging_item.move_center_to((
+            event.pos[0] + self.drag_offset[0],
+            event.pos[1] + self.drag_offset[1]
+        ))
 
     # Processa o momento em que o botão do mouse é solto
     def _handle_mouse_up(self):
-        if self.dragging_item is not None:
-            self._drop_item(self.dragging_item)
-            self.dragging_item = None
+        if self.dragging_item is None:
+            return
+
+        item = self.dragging_item
+        self.dragging_item = None
+
+        self._drop_item(item)
 
     # Processa um evento e devolve "menu" se o jogador quiser voltar
     def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if self.finished:
+            return None
+
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self.dragging_item = None
+            return "menu"
+
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             result = self._handle_mouse_down(event)
 
             if result == "menu":
@@ -123,98 +196,153 @@ class GameScreen:
         elif event.type == pygame.MOUSEMOTION:
             self._handle_mouse_motion(event)
 
-        elif event.type == pygame.MOUSEBUTTONUP:
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self._handle_mouse_up()
 
         return None
 
-    # Atualiza o estado da fase a cada quadro
+    # Atualiza o estado da partida a cada quadro.
+    # Devolve "game_over" quando as vidas acabam.
     def update(self):
-        self._update_timer()
+        if self.finished:
+            return None
 
-        if self._check_finished() and not self.finished:
+        fall_line = self._fall_line()
+        half = ITEM_SIZE // 2
+
+        # Avança os resíduos que estão descendo sozinhos pela esteira
+        for item in self.items[:]:
+            if item is self.dragging_item:
+                continue
+
+            # Mantém o resíduo dentro da tela se a janela for redimensionada
+            item.rect.centerx = clamp(item.rect.centerx, half, self.width - half)
+
+            item.fall()
+
+            if item.rect.top >= fall_line:
+                self.items.remove(item)
+                self.lives = max(0, self.lives - 1)
+                self.message.show("Caiu na lixeira sem separar!", HEART_COLOR)
+
+        # Controla o surgimento de novos resíduos (vários ao mesmo tempo)
+        self.spawn_timer -= 1
+
+        if self.spawn_timer <= 0 and len(self.items) < MAX_ITEMS:
+            min_x, max_x = self._spawn_range()
+
+            self.items.append(
+                spawn_trash_item(
+                    self.items,
+                    min_x,
+                    max_x,
+                    BELT_Y + BELT_HEIGHT // 2,
+                    self._current_speed()
+                )
+            )
+
+            self.spawn_timer = random.randint(SPAWN_MIN_FRAMES, SPAWN_MAX_FRAMES)
+
+        if self.lives <= 0:
             self.finished = True
-            self.message.show("Fase concluída!", GREEN_DARK)
+            self.dragging_item = None
+            self.end_reason = "Suas vidas acabaram!"
+            return "game_over"
 
-        if self.time_left <= 0 and not self.finished:
-            self.finished = True
-            self.message.show("Tempo esgotado!", RED)
+        return None
 
-    # Desenha as estrelas de vida no topo da tela
-    def _draw_stars(self, surface):
-        for index in range(3):
-            x = 40 + index * 42
-            y = 75
+    # Desenha a esteira, com rolos igualmente espaçados
+    def _draw_belt(self, surface):
+        belt = pygame.Rect(0, BELT_Y, surface.get_width(), BELT_HEIGHT)
+        pygame.draw.rect(surface, BELT_COLOR, belt)
 
-            color = YELLOW if index < self.stars else (190, 190, 190)
+        for x in range(24, surface.get_width(), 48):
+            pygame.draw.circle(
+                surface,
+                BELT_ROLLER,
+                (x, BELT_Y + BELT_HEIGHT // 2),
+                7
+            )
 
-            star = FONT_STAR.render("★", True, color)
-            surface.blit(star, (x, y))
+    # Desenha o painel de pontos (canto superior esquerdo)
+    def _draw_score_panel(self, surface):
+        panel = pygame.Rect(16, 16, 170, 56)
 
-    # Desenha o relógio com o tempo restante
-    def _draw_timer(self, surface):
-        center_x = surface.get_width() - 145
-        center_y = 70
+        pygame.draw.rect(surface, PANEL_DARK, panel, border_radius=10)
+        pygame.draw.rect(surface, (90, 210, 110), panel, width=2, border_radius=10)
 
-        pygame.draw.circle(surface, WHITE, (center_x, center_y), 30)
-        pygame.draw.circle(surface, DARK, (center_x, center_y), 30, width=2)
+        draw_recycle_icon(surface, (panel.left + 26, panel.centery), 16, (90, 210, 110))
 
-        pygame.draw.line(
-            surface,
-            DARK,
-            (center_x, center_y),
-            (center_x, center_y - 16),
-            width=3
+        label = FONT_SMALL.render("PONTOS", True, MUTED_ON_DARK)
+        surface.blit(label, (panel.left + 50, panel.top + 8))
+
+        value = FONT_SCORE.render(str(self.score), True, TEXT_ON_DARK)
+        surface.blit(value, (panel.left + 50, panel.top + 24))
+
+    # Desenha o painel de vidas (canto superior direito)
+    def _draw_lives_panel(self, surface):
+        width = surface.get_width()
+        panel = pygame.Rect(width - 16 - 150, 16, 150, 56)
+
+        pygame.draw.rect(surface, PANEL_DARK, panel, border_radius=10)
+
+        label = FONT_SMALL.render("VIDAS", True, MUTED_ON_DARK)
+        surface.blit(label, label.get_rect(midtop=(panel.centerx, panel.top + 8)))
+
+        start_x = panel.centerx - (LIVES_INICIAIS - 1) * 14
+
+        for i in range(LIVES_INICIAIS):
+            color = HEART_COLOR if i < self.lives else HEART_EMPTY
+            draw_heart(surface, (start_x + i * 28, panel.top + 38), 18, color)
+
+    # Desenha o aviso de acerto/erro sobre um fundo escuro, no meio da queda
+    def _draw_feedback(self, surface):
+        if not self.message.is_visible():
+            return
+
+        text_width, text_height = FONT_MESSAGE.size(self.message.text)
+
+        pill = pygame.Rect(0, 0, text_width + 40, text_height + 20)
+        pill.center = (
+            surface.get_width() // 2,
+            (BELT_Y + BELT_HEIGHT + self._fall_line()) // 2
         )
 
-        pygame.draw.line(
-            surface,
-            DARK,
-            (center_x, center_y),
-            (center_x + 11, center_y + 8),
-            width=3
-        )
+        pygame.draw.rect(surface, PANEL_DARK, pill, border_radius=10)
+        self.message.draw(surface, FONT_MESSAGE, pill.center)
 
-        timer_text = FONT_SCORE.render(str(max(0, self.time_left)), True, DARK)
-        surface.blit(timer_text, (center_x + 42, center_y - 12))
-
-    # Desenha a tela completa da fase
+    # Desenha a tela completa do jogo
     def draw(self, surface):
         width = surface.get_width()
         height = surface.get_height()
 
-        surface.fill(GREEN_BG)
+        # A janela é redimensionável: reposiciona as lixeiras a cada quadro
+        self.width = width
+        self.height = height
+        update_bin_positions(self.bins, width, height)
 
-        pygame.draw.rect(
-            surface,
-            (78, 174, 201),
-            (0, 0, width, int(height * 0.40))
+        surface.fill(SKY_BLUE)
+
+        self._draw_belt(surface)
+
+        hint = FONT_SUBTITLE.render(
+            "Arraste cada lixo até a lixeira certa antes que ele caia",
+            True,
+            WHITE
         )
-
-        self.back_button.update(pygame.mouse.get_pos())
-        self.back_button.draw(surface)
-
-        self._draw_stars(surface)
-
-        phase = FONT_PHASE.render("FASE 1", True, DARK)
-        phase_rect = phase.get_rect(center=(width - 90, 70))
-        surface.blit(phase, phase_rect)
-
-        self._draw_timer(surface)
-
-        update_bin_positions(self.bins, width)
+        surface.blit(hint, hint.get_rect(center=(width // 2, BELT_Y - 22)))
 
         for bin_data in self.bins:
             bin_data.draw(surface)
 
-        for item in self.trash_items:
+        for item in self.items:
             item.draw(surface)
 
-        score_text = FONT_SCORE.render(f"Pontos: {self.score}", True, WHITE)
-        surface.blit(score_text, (25, 125))
+        self._draw_score_panel(surface)
+        self._draw_lives_panel(surface)
 
-        self.message.draw(
-            surface,
-            FONT_MESSAGE,
-            center=(width // 2, height - 40)
-        )
+        self.back_button.rect.bottomleft = (25, height - 25)
+        self.back_button.update(pygame.mouse.get_pos())
+        self.back_button.draw(surface)
+
+        self._draw_feedback(surface)

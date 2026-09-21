@@ -3,21 +3,27 @@ import math
 import pygame
 
 from config import (
+    BG_DARK,
+    ICON_BG_DARK,
+    BTN_DARK,
+    BTN_DARK_HOVER,
+    BTN_DARK_BORDER,
+    PRIMARY_GREEN,
+    PRIMARY_GREEN_HOVER,
+    TEXT_ON_DARK,
+    MUTED_ON_DARK,
     WHITE,
-    LIME,
-    GREEN_DARK,
-    TEXT_LIGHT,
-    FOOTER,
     FONT_TITLE,
     FONT_SUBTITLE,
     FONT_SMALL,
     FONT_STAR,
 )
 from objects.button import Button
+from utils.helpers import draw_recycle_icon
 
 
 class MenuScreen:
-    """Tela inicial com o título do jogo e os botões principais."""
+    """Tela inicial com o título do jogo e os botões principais (tema escuro)."""
 
     def __init__(self):
         self.sound_enabled = True
@@ -25,24 +31,30 @@ class MenuScreen:
         self.play_button = Button(
             (0, 390, 260, 54),
             "▶  Jogar",
-            color=LIME,
+            color=PRIMARY_GREEN,
             text_color=WHITE,
-            border_color=LIME
+            border_color=PRIMARY_GREEN,
+            hover_color=PRIMARY_GREEN_HOVER,
+            hover_border_color=PRIMARY_GREEN_HOVER,
+            shadow=False
         )
 
-        self.instructions_button = Button(
-            (0, 454, 260, 54),
-            "ⓘ  Como jogar"
-        )
+        self.instructions_button = self._secondary_button((0, 454, 260, 54), "ⓘ  Como jogar")
+        self.sound_button = self._secondary_button((0, 518, 260, 54), "🔊  Som: ligado")
+        self.exit_button = self._secondary_button((0, 582, 260, 54), "×  Sair")
 
-        self.sound_button = Button(
-            (0, 518, 260, 54),
-            "🔊  Som: ligado"
-        )
-
-        self.exit_button = Button(
-            (0, 582, 260, 54),
-            "×  Sair"
+    # Cria um botão no estilo secundário escuro (fundo quase preto, borda sutil)
+    @staticmethod
+    def _secondary_button(rect, text):
+        return Button(
+            rect,
+            text,
+            color=BTN_DARK,
+            text_color=TEXT_ON_DARK,
+            border_color=BTN_DARK_BORDER,
+            hover_color=BTN_DARK_HOVER,
+            hover_border_color=BTN_DARK_BORDER,
+            shadow=False
         )
 
     # Processa um evento e devolve a próxima tela ("game", "instructions",
@@ -67,124 +79,29 @@ class MenuScreen:
 
         return None
 
-    # Desenha o fundo com os círculos decorativos
-    def _draw_background(self, surface):
-        surface.fill(WHITE)
-
-        pygame.draw.circle(
-            surface,
-            (237, 252, 237),
-            (-20, -20),
-            210
-        )
-
-        pygame.draw.circle(
-            surface,
-            (240, 253, 240),
-            (
-                surface.get_width() + 20,
-                surface.get_height() + 20
-            ),
-            175
-        )
-
-        pygame.draw.circle(
-            surface,
-            (249, 255, 249),
-            (
-                surface.get_width() // 2,
-                surface.get_height() // 2
-            ),
-            330
-        )
-
     # Desenha a tela completa do menu
     def draw(self, surface, elapsed):
         width = surface.get_width()
         height = surface.get_height()
 
-        self._draw_background(surface)
+        surface.fill(BG_DARK)
 
         center_x = width // 2
 
         offset = math.sin(elapsed * 3) * 5
 
-        icon_x = center_x
-        icon_y = 135 + offset
+        icon_center = (center_x, int(135 + offset))
 
-        pygame.draw.circle(
-            surface,
-            (224, 248, 224),
-            (
-                icon_x,
-                int(icon_y + 8)
-            ),
-            45
-        )
+        pygame.draw.circle(surface, ICON_BG_DARK, icon_center, 43)
+        draw_recycle_icon(surface, icon_center, 20, WHITE)
 
-        pygame.draw.circle(
-            surface,
-            LIME,
-            (
-                icon_x,
-                int(icon_y)
-            ),
-            43
-        )
+        title = FONT_TITLE.render("Sort it right!", True, TEXT_ON_DARK)
+        title_rect = title.get_rect(center=(center_x, 215))
+        surface.blit(title, title_rect)
 
-        icon_surface = FONT_STAR.render(
-            "♻",
-            True,
-            WHITE
-        )
-
-        icon_rect = icon_surface.get_rect(
-            center=(
-                icon_x,
-                int(icon_y)
-            )
-        )
-
-        surface.blit(
-            icon_surface,
-            icon_rect
-        )
-
-        title = FONT_TITLE.render(
-            "Sort it right!",
-            True,
-            GREEN_DARK
-        )
-
-        title_rect = title.get_rect(
-            center=(
-                center_x,
-                215
-            )
-        )
-
-        surface.blit(
-            title,
-            title_rect
-        )
-
-        subtitle = FONT_SUBTITLE.render(
-            "O jogo de reciclagem",
-            True,
-            TEXT_LIGHT
-        )
-
-        subtitle_rect = subtitle.get_rect(
-            center=(
-                center_x,
-                255
-            )
-        )
-
-        surface.blit(
-            subtitle,
-            subtitle_rect
-        )
+        subtitle = FONT_SUBTITLE.render("O jogo de reciclagem", True, MUTED_ON_DARK)
+        subtitle_rect = subtitle.get_rect(center=(center_x, 255))
+        surface.blit(subtitle, subtitle_rect)
 
         self.play_button.rect.centerx = center_x
         self.instructions_button.rect.centerx = center_x
@@ -193,30 +110,15 @@ class MenuScreen:
 
         mouse_pos = pygame.mouse.get_pos()
 
-        self.play_button.update(mouse_pos)
-        self.instructions_button.update(mouse_pos)
-        self.sound_button.update(mouse_pos)
-        self.exit_button.update(mouse_pos)
+        for button in (
+            self.play_button,
+            self.instructions_button,
+            self.sound_button,
+            self.exit_button
+        ):
+            button.update(mouse_pos)
+            button.draw(surface)
 
-        self.play_button.draw(surface)
-        self.instructions_button.draw(surface)
-        self.sound_button.draw(surface)
-        self.exit_button.draw(surface)
-
-        footer = FONT_SMALL.render(
-            "Use o mouse para jogar",
-            True,
-            FOOTER
-        )
-
-        footer_rect = footer.get_rect(
-            center=(
-                center_x,
-                height - 35
-            )
-        )
-
-        surface.blit(
-            footer,
-            footer_rect
-        )
+        footer = FONT_SMALL.render("Use o mouse para jogar", True, MUTED_ON_DARK)
+        footer_rect = footer.get_rect(center=(center_x, height - 35))
+        surface.blit(footer, footer_rect)
