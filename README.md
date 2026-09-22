@@ -107,7 +107,8 @@ Executar os testes unitários
 bash
 python -m unittest discover -s tests
 ```
-![alt text](<img width="1236" height="1273" alt="image" src="https://github.com/user-attachments/assets/b115f77a-966f-4a9d-8787-dfff0d2761b6" />
+![alt text](<img width="1273" height="1236" alt="image" src="https://github.com/user-attachments/assets/9efe8b2b-4fcb-4de8-b51c-35002c0088aa" />
+
 )
 ```
 
