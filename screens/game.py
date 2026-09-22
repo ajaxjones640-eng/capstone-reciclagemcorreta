@@ -28,8 +28,8 @@ from objects.trash import spawn_trash_item, ITEM_SIZE, POINTS_PER_ITEM
 from utils.helpers import TimedMessage, clamp, draw_heart, draw_recycle_icon
 
 # Esteira no topo da tela, de onde os resíduos nascem
-BELT_Y = 60
-BELT_HEIGHT = 150
+BELT_Y = 190
+BELT_HEIGHT = 60
 BELT_COLOR = (35, 40, 54)
 BELT_ROLLER = (70, 78, 96)
 
@@ -40,7 +40,7 @@ SPAWN_MIN_FRAMES = 70
 SPAWN_MAX_FRAMES = 130
 
 # Velocidade de queda (px por quadro): aumenta com a pontuação até o limite
-BASE_SPEED = 2.7
+BASE_SPEED = 3.2
 MAX_SPEED = 7.5
 SPEED_PER_POINT = 0.03
 
@@ -123,6 +123,14 @@ class GameScreen:
     def _fall_line(self):
         return self.bins[0].rect.top
 
+    # Lixeira sob o item sendo arrastado agora, se houver (usada para saber
+    # qual delas destacar/brilhar)
+    def _hovered_bin(self):
+        if self.dragging_item is None:
+            return None
+
+        return check_bin_collision(self.dragging_item.rect, self.bins)
+
     # Resolve o descarte: acerto soma pontos, erro tira uma vida.
     # Solto fora de uma lixeira, o resíduo simplesmente continua descendo.
     def _drop_item(self, item):
@@ -149,6 +157,7 @@ class GameScreen:
         for item in reversed(self.items):
             if item.rect.collidepoint(event.pos):
                 self.dragging_item = item
+                item.set_dragging(True)
                 self.drag_offset = (
                     item.rect.centerx - event.pos[0],
                     item.rect.centery - event.pos[1]
@@ -174,8 +183,16 @@ class GameScreen:
 
         item = self.dragging_item
         self.dragging_item = None
+        item.set_dragging(False)
 
         self._drop_item(item)
+
+    # Cancela o arrasto em andamento (usado ao sair da tela pelo menu/ESC),
+    # devolvendo o item ao tamanho e ângulo normais
+    def _cancel_drag(self):
+        if self.dragging_item is not None:
+            self.dragging_item.set_dragging(False)
+            self.dragging_item = None
 
     # Processa um evento e devolve "menu" se o jogador quiser voltar
     def handle_event(self, event):
@@ -183,14 +200,14 @@ class GameScreen:
             return None
 
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            self.dragging_item = None
+            self._cancel_drag()
             return "menu"
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             result = self._handle_mouse_down(event)
 
             if result == "menu":
-                self.dragging_item = None
+                self._cancel_drag()
                 return "menu"
 
         elif event.type == pygame.MOUSEMOTION:
@@ -212,6 +229,10 @@ class GameScreen:
 
         # Avança os resíduos que estão descendo sozinhos pela esteira
         for item in self.items[:]:
+            # A inclinação/tamanho do item ao ser arrastado relaxam a cada
+            # quadro, então precisam ser atualizados mesmo sem ele se mexer
+            item.update_visual()
+
             if item is self.dragging_item:
                 continue
 
@@ -245,7 +266,7 @@ class GameScreen:
 
         if self.lives <= 0:
             self.finished = True
-            self.dragging_item = None
+            self._cancel_drag()
             self.end_reason = "Suas vidas acabaram!"
             return "game_over"
 
@@ -332,8 +353,10 @@ class GameScreen:
         )
         surface.blit(hint, hint.get_rect(center=(width // 2, BELT_Y - 22)))
 
+        hovered_bin = self._hovered_bin()
+
         for bin_data in self.bins:
-            bin_data.draw(surface)
+            bin_data.draw(surface, highlighted=(bin_data is hovered_bin))
 
         for item in self.items:
             item.draw(surface)

@@ -6,8 +6,8 @@ from config import (
     MUTED_ON_DARK,
     BLUE,
     RED,
-    GLASS_GREEN,
     YELLOW,
+    BROWN,
     HEART_COLOR,
     FONT_TITLE,
     FONT_SUBTITLE,
@@ -17,10 +17,10 @@ from objects.button import Button
 from utils.helpers import draw_heart
 
 TOPICS = [
-    (BLUE, "PAPEL", "Jornais, folhas, papelão e caixas."),
-    (RED, "PLÁSTICO", "Garrafas, embalagens e sacolas."),
-    (GLASS_GREEN, "VIDRO", "Potes, garrafas e frascos de vidro."),
+    (BLUE, "PAPEL", "Jornais, sacos, copos e caixas de papel."),
+    (RED, "PLÁSTICO", "Garrafas, galões e embalagens plásticas."),
     (YELLOW, "METAL", "Latas de alumínio e de aço."),
+    (BROWN, "ORGÂNICO", "Restos de comida, cascas e sementes."),
 ]
 
 
@@ -97,7 +97,7 @@ class InstructionsScreen:
             draw_heart(surface, (heart_x, hearts_y + 40), 18, HEART_COLOR)
 
         footer2 = FONT_SUBTITLE.render(
-            "O jogo acaba quando as vidas ou o tempo se esgotam. Boa sorte!",
+            "O jogo acaba quando as vidas se esgotam. Boa sorte!",
             True,
             MUTED_ON_DARK
         )

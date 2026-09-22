@@ -1,7 +1,20 @@
+import os
+
 import pygame
 
 # Inicialização do pygame (precisa acontecer antes de criar as fontes)
 pygame.init()
+
+# Pasta raiz do projeto (onde este arquivo está), usada para montar caminhos
+# absolutos de assets — assim as sprites carregam não importa de onde o
+# "python app.py" for executado.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def asset_path(*parts):
+    """Monta um caminho absoluto dentro de assets/, ex: asset_path("images", "bins", "paper.png")."""
+
+    return os.path.join(BASE_DIR, "assets", *parts)
 
 # Configuração da janela
 WIDTH = 1280
