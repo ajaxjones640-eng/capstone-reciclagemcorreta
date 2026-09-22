@@ -1,6 +1,28 @@
 import math
+import os
 
 import pygame
+
+_SPRITE_CACHE = {}
+
+
+def load_sprite(path):
+    """Carrega uma imagem (com transparência) e guarda em cache.
+
+    Devolve None se o caminho for None ou o arquivo não existir, para que a
+    tela possa cair num desenho vetorial de reserva em vez de quebrar.
+    """
+
+    if not path:
+        return None
+
+    if path not in _SPRITE_CACHE:
+        if os.path.exists(path):
+            _SPRITE_CACHE[path] = pygame.image.load(path).convert_alpha()
+        else:
+            _SPRITE_CACHE[path] = None
+
+    return _SPRITE_CACHE[path]
 
 
 class TimedMessage:

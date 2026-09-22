@@ -28,8 +28,8 @@ from objects.trash import spawn_trash_item, ITEM_SIZE, POINTS_PER_ITEM
 from utils.helpers import TimedMessage, clamp, draw_heart, draw_recycle_icon
 
 # Esteira no topo da tela, de onde os resíduos nascem
-BELT_Y = 190
-BELT_HEIGHT = 60
+BELT_Y = 60
+BELT_HEIGHT = 150
 BELT_COLOR = (35, 40, 54)
 BELT_ROLLER = (70, 78, 96)
 
@@ -40,7 +40,7 @@ SPAWN_MIN_FRAMES = 70
 SPAWN_MAX_FRAMES = 130
 
 # Velocidade de queda (px por quadro): aumenta com a pontuação até o limite
-BASE_SPEED = 3.2
+BASE_SPEED = 2.7
 MAX_SPEED = 7.5
 SPEED_PER_POINT = 0.03
 

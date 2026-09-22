@@ -1,40 +1,70 @@
 import pygame
 
 from config import WHITE, FONT_SMALL, BLUE, RED, GLASS_GREEN, YELLOW, BROWN
-from utils.helpers import draw_recycle_icon, draw_item_icon
+from utils.helpers import draw_recycle_icon, draw_item_icon, load_sprite
 
 BIN_SIZE = 110
 BIN_GAP = 22
 BIN_BOTTOM_MARGIN = 56
 
-# (tipo, nome exibido, cor, ícone do material)
+# (tipo, nome exibido, cor de fallback, ícone de fallback, arquivo de sprite)
+# A sprite, quando existe, substitui o desenho vetorial (cor + ícone), que
+# fica só como reserva para o tipo sem sprite (vidro).
 BIN_DEFINITIONS = [
-    ("paper", "Papel", BLUE, "sheets"),
-    ("plastic", "Plástico", RED, "bottle"),
-    ("glass", "Vidro", GLASS_GREEN, "bottle"),
-    ("metal", "Metal", YELLOW, "can"),
-    ("organic", "Orgânico", BROWN, "leaf"),
+    ("paper", "Papel", BLUE, "sheets", "assets/images/bins/paper.png"),
+    ("plastic", "Plástico", RED, "bottle", "assets/images/bins/plastic.png"),
+    ("glass", "Vidro", GLASS_GREEN, "bottle", None),
+    ("metal", "Metal", YELLOW, "can", "assets/images/bins/metal.png"),
+    ("organic", "Orgânico", BROWN, "leaf", "assets/images/bins/organic.png"),
 ]
 
-# Cor de cada tipo de cesto (usada também para colorir os resíduos)
-BIN_COLORS = {bin_type: color for bin_type, _, color, _ in BIN_DEFINITIONS}
+# Cor de cada tipo de lixeira (usada para colorir os resíduos sem sprite própria)
+BIN_COLORS = {bin_type: color for bin_type, _, color, _, _ in BIN_DEFINITIONS}
 
 
 class Bin:
-    """Uma lixeira de um tipo específico de material."""
+    """Uma lixeira de um tipo específico de material.
 
-    def __init__(self, bin_type, name, color, icon, size=BIN_SIZE):
+    Se houver uma sprite para o tipo, ela é desenhada (mantendo a proporção
+    original) ocupando a altura do cesto; sem sprite, cai no desenho vetorial
+    antigo (retângulo colorido com ícone).
+    """
+
+    def __init__(self, bin_type, name, color, icon, sprite_path, size=BIN_SIZE):
         self.type = bin_type
         self.name = name
         self.color = color
         self.icon = icon
         self.rect = pygame.Rect(0, 0, size, size)
+        self.sprite = load_sprite(sprite_path)
 
-    # Desenha a lixeira, a seta colorida acima dela e o nome abaixo
+    # Desenha a lixeira: sprite (se houver) ou o retângulo vetorial de reserva
     def draw(self, surface):
-        rect = self.rect
+        if self.sprite is not None:
+            self._draw_sprite(surface)
+        else:
+            self._draw_vector(surface)
 
-        # Tudo foi desenhado originalmente para uma lixeira de 78 px
+        label = FONT_SMALL.render(self.name, True, WHITE)
+        label_rect = label.get_rect(center=(self.rect.centerx, self.rect.bottom + 14))
+        surface.blit(label, label_rect)
+
+    # Desenha a sprite da lixeira, escalada para a altura do cesto,
+    # centralizada na base do slot reservado (a imagem é mais alta que larga)
+    def _draw_sprite(self, surface):
+        rect = self.rect
+        sw, sh = self.sprite.get_size()
+
+        height = int(rect.height * 1.55)
+        width = int(sw * (height / sh))
+
+        image = pygame.transform.smoothscale(self.sprite, (width, height))
+        image_rect = image.get_rect(midbottom=(rect.centerx, rect.bottom))
+        surface.blit(image, image_rect)
+
+    # Desenho vetorial de reserva (usado pelo vidro, que não tem sprite)
+    def _draw_vector(self, surface):
+        rect = self.rect
         k = rect.width / 78
 
         arrow_half = int(10 * k)
@@ -66,17 +96,13 @@ class Bin:
             scale=0.7 * k
         )
 
-        label = FONT_SMALL.render(self.name, True, WHITE)
-        label_rect = label.get_rect(center=(rect.centerx, rect.bottom + 14))
-        surface.blit(label, label_rect)
-
 
 def create_bins():
     """Cria o conjunto de lixeiras (todas visíveis ao mesmo tempo)."""
 
     return [
-        Bin(bin_type, name, color, icon)
-        for bin_type, name, color, icon in BIN_DEFINITIONS
+        Bin(bin_type, name, color, icon, sprite_path)
+        for bin_type, name, color, icon, sprite_path in BIN_DEFINITIONS
     ]
 
 
